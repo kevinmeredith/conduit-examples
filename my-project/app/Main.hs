@@ -24,24 +24,3 @@ main = do
          .| mapMC magic
          .| mapM_C print
 
--- mapMC :: Monad m => (a -> m b) -> Conduit a m b
-
-iterMC' :: Monad m => (a -> m ()) -> Conduit a m a
-iterMC' f = mapMC (\a -> (f a) >> return a)
-
-
---  (<*>) :: f (a -> b) -> f a -> f b
--- liftA :: Applicative f => (a -> b) -> f a -> f b
-sink' :: Monad m => ConduitM Int o m (String, Int)
-sink' = liftA2 (,) a b
-  where
-   a = takeC 5 .| mapC show .| foldC
-   b = sumC
-
-
--- ofoldr :: (Element mono -> b -> b) -> b -> mono -> b
--- yield :: Monad m => o -> ConduitM i [o] m ()
-yieldMany' :: (Data.MonoTraversable.MonoFoldable mono, Monad m) =>
-        mono 
-        -> ConduitM i (Data.MonoTraversable.Element mono) m ()
-yieldMany' = ofoldr (\a b -> yield a >> b) mempty
