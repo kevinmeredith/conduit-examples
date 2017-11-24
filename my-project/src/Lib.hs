@@ -32,5 +32,44 @@ sink' = liftA2 (,) a b
 yieldMany' :: (Data.MonoTraversable.MonoFoldable mono, Monad m) =>
         mono
         -> ConduitM i (Data.MonoTraversable.Element mono) m ()
-yieldMany' = ofoldr (\a				    b -> yield a >> b) mempty
+yieldMany' = ofoldr (\a b -> yield a >> b) mempty
 
+myMapC :: Monad m => (i -> o) -> ConduitM i o m ()
+myMapC f = loop
+  where 
+    loop = do
+       mx <- await
+       case mx of
+         Nothing -> return ()
+         Just x  -> do 
+           yield (f x)
+           loop
+
+--EXERCISE Try implementing filterC and mapMC. For the latter, you'll need to use the lift function.
+
+-- filterC :: Monad m => (a -> Bool) -> Conduit a m a
+filterC' :: Monad m => (a -> Bool) -> Conduit a m a
+filterC' p = loop
+  where 
+    loop = do
+       mx <- await
+       case mx of
+         Nothing -> return ()
+         Just x ->
+             if (p x) 
+               then (yield x) >> loop
+               else loop
+
+-- mapMC :: Monad m => (a -> m b) -> Conduit a m b
+-- λ: >:i Conduit
+-- type Conduit i (m :: * -> *) o = ConduitM i o m ()
+mapMC' :: Monad m => (a -> m b) -> ConduitM a b m ()
+mapMC' f = loop
+  where 
+    loop = do
+       mx <- await
+       case mx of
+         Nothing -> return ()
+         Just x  -> do
+           lift $ f x
+           loop
